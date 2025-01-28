@@ -63,6 +63,9 @@ class Cell:
         self.has_top_wall = True
         self.has_bottom_wall = True
     
+    def __repr__(self):
+        return f"Cell at {self._x1} {self._y1}, visited: {self._visited}, left: {self.has_left_wall}, right: {self.has_right_wall}, top: {self.has_top_wall}, bottom: {self.has_bottom_wall}"
+
     def draw(self):
         top_left = Point(self._x1, self._y1)
         top_right = Point(self._x2, self._y1)
@@ -152,28 +155,28 @@ class Maze:
                 self._cells[x-1][y].has_right_wall = False
                 self._draw_cell(x, y)
                 self._draw_cell(x-1, y)
-                self._cells[x][y].draw_move(self._cells[x-1][y])
+                #self._cells[x][y].draw_move(self._cells[x-1][y])
                 next = [x-1, y]
             elif wall == "right":
                 self._cells[x][y].has_right_wall = False
                 self._cells[x+1][y].has_left_wall = False
                 self._draw_cell(x, y)
                 self._draw_cell(x+1, y)
-                self._cells[x][y].draw_move(self._cells[x+1][y])
+                #self._cells[x][y].draw_move(self._cells[x+1][y])
                 next = [x+1, y]
             elif wall == "top":
                 self._cells[x][y].has_top_wall = False
                 self._cells[x][y-1].has_bottom_wall = False
                 self._draw_cell(x, y)
                 self._draw_cell(x, y-1)
-                self._cells[x][y].draw_move(self._cells[x][y-1])
+                #self._cells[x][y].draw_move(self._cells[x][y-1])
                 next = [x, y-1]
             else:
                 self._cells[x][y].has_bottom_wall = False
                 self._cells[x][y+1].has_top_wall = False
                 self._draw_cell(x, y)
                 self._draw_cell(x, y+1)
-                self._cells[x][y].draw_move(self._cells[x][y+1])
+                #self._cells[x][y].draw_move(self._cells[x][y+1])
                 next = [x, y+1]
             self._break_walls(next[0], next[1])
     
@@ -181,3 +184,33 @@ class Maze:
         for i in range(self.columns):
             for j in range(self.rows):
                 self._cells[i][j]._visited = False
+    
+    def solve(self):
+        return self._solver()
+    
+    def _solver(self, x=0, y=0):
+        self._animate()
+        self._cells[x][y]._visited = True
+        if x == len(self._cells)-1 and y == len(self._cells[0])-1:
+            return True
+        if 0 <= x-1 < self.columns and 0 <= y < self.rows and not self._cells[x][y].has_left_wall and not self._cells[x-1][y]._visited:
+            self._cells[x][y].draw_move(self._cells[x-1][y])
+            if self._solver(x-1, y):
+                return True
+            self._cells[x][y].draw_move(self._cells[x-1][y], True)
+        if 0 <= x+1 < self.columns and 0 <= y < self.rows and not self._cells[x][y].has_right_wall and not self._cells[x+1][y]._visited:
+            self._cells[x][y].draw_move(self._cells[x+1][y])
+            if self._solver(x+1, y):
+                return True
+            self._cells[x][y].draw_move(self._cells[x+1][y], True)
+        if 0 <= x < self.columns and 0 <= y-1 < self.rows and not self._cells[x][y].has_top_wall and not self._cells[x][y-1]._visited:
+            self._cells[x][y].draw_move(self._cells[x][y-1])
+            if self._solver(x, y-1):
+                return True
+            self._cells[x][y].draw_move(self._cells[x][y-1], True)
+        if 0 <= x < self.columns and 0 <= y+1 < self.rows and not self._cells[x][y].has_bottom_wall and not self._cells[x][y+1]._visited:
+            self._cells[x][y].draw_move(self._cells[x][y+1])
+            if self._solver(x, y+1):
+                return True
+            self._cells[x][y].draw_move(self._cells[x][y+1], True)
+        return False
